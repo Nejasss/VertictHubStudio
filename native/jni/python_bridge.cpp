@@ -91,7 +91,11 @@ Java_com_verticthub_studio_bridge_PythonBridge_nativeInitRuntime(
         std::string(pythonHome) + "/lib/python3.14', r'" +
         std::string(nativeLibDir) + "']:\n"
         "    if p and p not in sys.path:\n"
-        "        sys.path.insert(0, p)\n";
+        "        sys.path.insert(0, p)\n"
+        "try:\n"
+        "    import sitecustomize\n"
+        "except Exception:\n"
+        "    pass\n";
     PyRun_SimpleString(setup_paths.c_str());
 
     g_initialized = true;

@@ -85,20 +85,10 @@ jobs:
         run: |
           pip download --no-binary=:all: --dest /tmp/pycrypto_src "pycryptodome==3.21.0"
           tar -xzf /tmp/pycrypto_src/pycryptodome-3.21.0.tar.gz -C /tmp/pycrypto_src
-          cd /tmp/pycrypto_src/pycryptodome-3.21.0
-
-          TOOLCHAIN="$ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64"
-          export CC="$TOOLCHAIN/bin/aarch64-linux-android24-clang"
-          export AR="$TOOLCHAIN/bin/llvm-ar"
-          export LDSHARED="$CC -shared"
-          export OPT="-O2 -fPIC"
-          export CFLAGS="-O2 -fPIC -DLTC_NO_ASM"
-          export LDFLAGS=""
-
-          python3 setup.py build_ext --inplace
+          python3 "${GITHUB_WORKSPACE}/scripts/cross_compile_pycryptodome.py"
 
           mkdir -p "${GITHUB_WORKSPACE}/app/src/main/assets/python/site-packages"
-          cp -r lib/Crypto "${GITHUB_WORKSPACE}/app/src/main/assets/python/site-packages/"
+          cp -r /tmp/pycrypto_src/pycryptodome-3.21.0/lib/Crypto "${GITHUB_WORKSPACE}/app/src/main/assets/python/site-packages/"
           python3 "${GITHUB_WORKSPACE}/scripts/package_pycryptodome.py"
 
       - name: 7. Validate Runtime Spec, Dependency Manifest & Core Modules
