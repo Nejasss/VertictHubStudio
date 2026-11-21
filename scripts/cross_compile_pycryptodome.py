@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Cross-compiles PyCryptodome for Android ARM64 (CPython 3.14) without host sysconfig leakage."""
 import os
-import shutil
 import struct
 import subprocess
 import sys
@@ -39,24 +38,38 @@ def main() -> int:
     if not os.path.isdir(py314_inc):
         raise FileNotFoundError(f"CPython 3.14 include dir not found: {py314_inc}")
 
-    # Wrapper linker that strips any host x86_64 -L/usr/* or -L/lib* flags
+    # Wrapper linker: buang flag -L/-I kosong maupun path host x86_64 (/usr/*, /lib*)
     ld_wrapper = os.path.join(cross_dir, "aarch64-ld-wrapper.sh")
     with open(ld_wrapper, "w", encoding="utf-8", newline="\n") as f:
         f.write(
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
             "ARGS=()\n"
+            "SKIP_NEXT=0\n"
             "for arg in \"$@\"; do\n"
+            "  if [ \"$SKIP_NEXT\" -eq 1 ]; then\n"
+            "    SKIP_NEXT=0\n"
+            "    continue\n"
+            "  fi\n"
+            "  [ -z \"$arg\" ] && continue\n"
             "  case \"$arg\" in\n"
-            "    -L/usr/*|-L/lib*|-I/usr/*) continue ;;\n"
-            "    *) ARGS+=(\"$arg\") ;;\n"
+            "    -L|-I)\n"
+            "      SKIP_NEXT=1\n"
+            "      continue\n"
+            "      ;;\n"
+            "    -L/usr/*|-L/lib*|-I/usr/*)\n"
+            "      continue\n"
+            "      ;;\n"
+            "    *)\n"
+            "      ARGS+=(\"$arg\")\n"
+            "      ;;\n"
             "  esac\n"
             "done\n"
             f'exec "{cc}" -shared "${{ARGS[@]}}"\n'
         )
     os.chmod(ld_wrapper, 0o755)
 
-    # Generate isolated _sysconfigdata__android_aarch64.py so setuptools uses CPython 3.14 headers & zero host LIBDIR
+    # Set LIBDIR=None & LIBPL=None agar distutils tidak menyisipkan argumen -L kosong
     base_vars = dict(sysconfig.get_config_vars())
     base_vars.update(
         {
@@ -74,8 +87,8 @@ def main() -> int:
             "CPPFLAGS": f"-I{py314_inc}",
             "LDFLAGS": "",
             "PY_LDFLAGS": "",
-            "LIBDIR": "",
-            "LIBPL": "",
+            "LIBDIR": None,
+            "LIBPL": None,
             "INCLUDEPY": py314_inc,
             "CONFINCLUDEPY": py314_inc,
             "EXT_SUFFIX": ".cpython-314-aarch64-linux-android.so",
@@ -104,7 +117,6 @@ def main() -> int:
 
     subprocess.run([sys.executable, "setup.py", "build_ext", "--inplace"], cwd=src_dir, env=env, check=True)
 
-    # Verify every compiled .so is genuine AArch64 ELF
     so_count = 0
     for r, _, files in os.walk(os.path.join(src_dir, "lib", "Crypto")):
         for fn in files:
