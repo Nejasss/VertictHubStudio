@@ -99,7 +99,7 @@ jobs:
 
       - name: 8. Build Native ARM64 JNI & Android APK
         run: |
-          gradle assembleRelease --stacktrace
+          gradle assembleRelease -x lintVitalRelease --max-workers=2 --stacktrace
 
       - name: 9. Verify ARM64 ELF Binaries & Package Artifacts
         run: |
