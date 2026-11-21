@@ -118,12 +118,10 @@ fun HistoryScreen(
                         Text("Saved Output: ${entry.outputPath}", style = MaterialTheme.typography.labelSmall, color = EmeraldReady)
                     }
                     if (entry.errorLog.isNotEmpty()) {
-                        Text("Error Log:
-${entry.errorLog}", style = MaterialTheme.typography.bodySmall, color = CrimsonFail)
+                        Text("Error Log:\n${entry.errorLog}", style = MaterialTheme.typography.bodySmall, color = CrimsonFail)
                     }
                     if (entry.outputPreview.isNotEmpty()) {
-                        Text("Output Preview:
-${entry.outputPreview.take(1500)}", style = MaterialTheme.typography.bodySmall)
+                        Text("Output Preview:\n${entry.outputPreview.take(1500)}", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },

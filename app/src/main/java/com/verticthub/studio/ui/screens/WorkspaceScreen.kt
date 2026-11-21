@@ -475,8 +475,7 @@ fun EngineStatusBanner(engineState: EngineStatusState, onReinit: () -> Unit) {
                     color = CrimsonFail
                 )
                 Text(
-                    "Path: ${engineState.relatedPath}
-Fix: ${engineState.recoveryStep}",
+                    "Path: ${engineState.relatedPath}\nFix: ${engineState.recoveryStep}",
                     style = MaterialTheme.typography.labelSmall,
                     color = TextSecondary
                 )

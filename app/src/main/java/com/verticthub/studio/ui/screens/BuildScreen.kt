@@ -168,8 +168,7 @@ fun BuildScreen(
                             outputPreview = buildLog
                         )
                     } else {
-                        val err = "${res.optString("error")}
-Recovery: ${res.optString("recovery")}"
+                        val err = "${res.optString("error")}\nRecovery: ${res.optString("recovery")}"
                         buildLog = err
                         artifactContent = ""
                         historyRepository.record(

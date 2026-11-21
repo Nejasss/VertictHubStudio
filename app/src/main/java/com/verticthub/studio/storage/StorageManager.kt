@@ -215,7 +215,7 @@ class StorageManager(private val context: Context) {
     fun clearTemporaryCache(): Long {
         var freed = 0L
         listOf(cacheDir, logsDir).forEach { dir ->
-            dir.walkBottomDown().filter { it.isFile }.forEach { f ->
+            dir.walkBottomUp().filter { it.isFile }.forEach { f ->
                 freed += f.length()
                 f.delete()
             }
