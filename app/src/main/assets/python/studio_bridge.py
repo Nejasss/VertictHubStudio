@@ -267,7 +267,7 @@ def analyze_ast(source_code: str, filename: str = "script.py") -> str:
                 }
             )
 
-        integrity_report = ast_integrity.validate_source(source_code)
+        integrity_report = ast_integrity.validate_source(source_code, stage="analyze_ast")
         const_inv = constant_protection.scan_constants(source_code)
 
         imports = []
@@ -380,7 +380,7 @@ def run_obfuscation(source_code: str, filename: str = "script.py", config_json: 
             gate_info=gate_info,
         )
 
-        ast_integrity.validate_source(obf_source)
+        ast_integrity.validate_source(obf_source, stage="run_obfuscation")
 
         vocab = leak_scan.extract_sensitive_vocabulary(source_code)
         with tempfile.NamedTemporaryFile("w", suffix=".py", encoding="utf-8", delete=False) as tf:
