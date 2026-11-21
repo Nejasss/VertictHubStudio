@@ -1,0 +1,143 @@
+{
+  "manifest": {
+    "version": "3.14.10-arm64-offline",
+    "files": {
+      "__init__.py": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      "antidebug.py": {
+        "sha256": "7b0a45898b409aabb9f4a95e41f5164eb8a142a179aae2516643b21d18bfb397",
+        "size": 32257
+      },
+      "antisandbox.py": {
+        "sha256": "1870a98c51658326b880907028a9091cada62cc7ebd243d5fcf1fec7dbb296a6",
+        "size": 9394
+      },
+      "ast_integrity.py": {
+        "sha256": "10ef6f70f27534d160ed17ac65649a972e2c583e9ac995aa9583bb2b1971307d",
+        "size": 8610
+      },
+      "attribute_obfuscation.py": {
+        "sha256": "bf1ae7729b401bfb79a54aaac6d589cb18d0b0ab5dcfbecbc413db8a9cf0934e",
+        "size": 25705
+      },
+      "bootstrap.py": {
+        "sha256": "736e4468beb32e2457ca33f741eb945f76762e7881596a7b9b659ad2447dd3b2",
+        "size": 34392
+      },
+      "constant_protection.py": {
+        "sha256": "fb1e64e7f2406136bebb4d43d2e2955416ec0332cdb340bbf286588c6e9fc63c",
+        "size": 16576
+      },
+      "control_flow.py": {
+        "sha256": "65f1fd16d3c6cb2fe5b26cae6e2855bbe7bce99f33f06424313be14a814c95bc",
+        "size": 9627
+      },
+      "crypto.py": {
+        "sha256": "479444144f1d3d52bfdc21f517530f3f7643e11dc84bf70e4ee7db42d92ce431",
+        "size": 13135
+      },
+      "cython_build.py": {
+        "sha256": "64ef8dc86cba8cdb21375fe0fe84eca9bcf7736d872917da03022f6f11ea9f9b",
+        "size": 29006
+      },
+      "cython_guard.py": {
+        "sha256": "e1a9aaa9a3284934c315e4d9f1f785c51e6b3d0d5c6030b90e656cef4c632687",
+        "size": 21236
+      },
+      "data_flow_obfuscation.py": {
+        "sha256": "fbf6bc83afb80b005301b4a39cbde88c0a58bd13171bfe8e89a951a2b2295f90",
+        "size": 13445
+      },
+      "embed_build.py": {
+        "sha256": "1fd8af61ec3b8005aa772b920b9d625e333e822e1468e0aafb7049c0cb25009c",
+        "size": 21757
+      },
+      "expression_obfuscation.py": {
+        "sha256": "98f8815a91b0dc234fd9c843d6906032465444ffaed3c58114bba7f78ea67b00",
+        "size": 6262
+      },
+      "function_transformation.py": {
+        "sha256": "95826aeba579db8a7d0a4a4e1ee8d3313d505576153e3df20e50bf5f0b16d02c",
+        "size": 16622
+      },
+      "hook_detection.py": {
+        "sha256": "09cee7d4c518662666af85b014c3315798c06f4c1390e0c49daa94fe250dc7c7",
+        "size": 13191
+      },
+      "identifier_rename.py": {
+        "sha256": "c86c350b1b39ebf2f6fbe8b25f7b9453739d861075ee31f516036ab63f53d268",
+        "size": 31421
+      },
+      "import_obfuscation.py": {
+        "sha256": "9505f7d86f94de6496e4abfc887dc0299b2086609451e3557564417bfff9f057",
+        "size": 10445
+      },
+      "junk.py": {
+        "sha256": "11caaa923cdc6bfaeb646c8f56a30611e9f8ad87ca7584bd9509870135fbca9e",
+        "size": 6507
+      },
+      "launch_integrity.py": {
+        "sha256": "800573421d842f4eb2a84d38d026460c673817c6ded78c2ff14184859d938074",
+        "size": 6289
+      },
+      "leak_scan.py": {
+        "sha256": "0865ec9491d84d79647d45b7981baae676302b16a54db085ba94b86bb73becfb",
+        "size": 11994
+      },
+      "libpython_fetch.py": {
+        "sha256": "acf2fab5871bdb8122dd2701dc01fa2821c593cc21d66adc372ee67764f7cf38",
+        "size": 1766
+      },
+      "native_decryptor_build.py": {
+        "sha256": "0350f793b9125ba14f8dcf859b3403aff45ee9a2790d831ee7200dea29aac5ba",
+        "size": 17291
+      },
+      "native_launcher.py": {
+        "sha256": "be2e8cf71094544366969260e19a126a5f6013852a37bb4e2c66c9aefe4ec438",
+        "size": 45811
+      },
+      "native_worker_compat.py": {
+        "sha256": "7f62c0f95c313a2d4a2a776383beaf21ca5324a537f411ad4b962139328c5bb5",
+        "size": 10985
+      },
+      "obfuscator.py": {
+        "sha256": "11555273a08e5fda90b3153b5496a8816b96f27cdffbf4898f5abc4d3089b8e1",
+        "size": 46881
+      },
+      "packer.py": {
+        "sha256": "a75f0aac16d00f13a6e08939fdbca96cfe193b30cd0349eafc924c0acdd5ca28",
+        "size": 51081
+      },
+      "runtime_fetch.py": {
+        "sha256": "8edadb51845e55966a1a2c3c2a2681a558a2ad3e7856af5a0605e17f1f009499",
+        "size": 3012
+      },
+      "rust_launcher.py": {
+        "sha256": "8ea91e3f7fb6584da08934b6160f8ee1ffcbc82c843d1d19e743db957c7f166b",
+        "size": 9952
+      },
+      "signing_autosetup.py": {
+        "sha256": "d59fe613c0da8fd64ad2b7f6dfabf1fd55fde45846364753436472b9232f8358",
+        "size": 3386
+      },
+      "ssl_pinning.py": {
+        "sha256": "c155eac8dbafedc11f58e8279155363255ea69e4259c2552244ee532aefc3733",
+        "size": 26316
+      },
+      "string_enc.py": {
+        "sha256": "2b1362c309b95dfdca4254e8638f610d7c2ac2730c2cfd8499078101b86d015f",
+        "size": 24671
+      },
+      "unicode_names.py": {
+        "sha256": "54f1f691c95493fbfce6771db1ec2acf0951dc335a5b0b4751c84923e4b75cf2",
+        "size": 9224
+      },
+      "worker_gate_compat.py": {
+        "sha256": "84042336c18a78376eb3cc04c01a5bc529b1c2cacdf7e906a598f6297c44dbb6",
+        "size": 7761
+      }
+    }
+  }
+}

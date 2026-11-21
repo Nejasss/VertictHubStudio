@@ -1,0 +1,57 @@
+{
+  "manifest_version": "1.0.0",
+  "target_runtime": "CPython 3.14.10",
+  "target_abi": "arm64-v8a",
+  "offline_guaranteed": true,
+  "dependencies": [
+    {
+      "name": "cpython-android-aarch64",
+      "group": "Python Standard Library & Shared Runtime",
+      "version": "3.14.10",
+      "source": "https://www.python.org/downloads/release/python-31410/",
+      "sha256": "423c80b957330cf0ebb92b9b20f2294c292144a441bdb0ceb8c69d14928e569b",
+      "license": "PSF-2.0",
+      "target_platform": "Android API 24+",
+      "abi": "arm64-v8a",
+      "python_3_14_10_compat": true,
+      "bundling": "Bundled in APK (jniLibs/arm64-v8a/libpython3.14.so + assets/python/stdlib)",
+      "verification": "Py_InitializeFromConfig + sys.version_info == (3, 14, 10)"
+    },
+    {
+      "name": "pycryptodome",
+      "group": "Native Python Extension",
+      "version": "3.21.0",
+      "source": "PyPI sdist cross-compiled with Android NDK r27c (aarch64-linux-android24-clang)",
+      "license": "BSD-2-Clause / Public Domain",
+      "target_platform": "Android API 24+",
+      "abi": "arm64-v8a (cp314-android_arm64_v8a)",
+      "python_3_14_10_compat": true,
+      "bundling": "Bundled in APK (assets/python/site-packages/Crypto + jniLibs/arm64-v8a/_raw_*.so)",
+      "verification": "AES-256-CBC encrypt/decrypt + SHA256 + Ed25519 ECC self-test"
+    },
+    {
+      "name": "libverticthub_jni.so",
+      "group": "Shared Library Android",
+      "version": "1.0.0",
+      "source": "native/jni/python_bridge.cpp",
+      "license": "MIT",
+      "target_platform": "Android API 24+",
+      "abi": "arm64-v8a",
+      "python_3_14_10_compat": true,
+      "bundling": "Compiled via CMake + NDK into APK jniLibs/arm64-v8a",
+      "verification": "System.loadLibrary(\"verticthub_jni\") + JNI health check"
+    },
+    {
+      "name": "vh-core-pyobfuscator",
+      "group": "Dependency Core",
+      "version": "1.0.0-audited",
+      "source": "vh.zip (34 audited Python modules)",
+      "license": "Project License",
+      "target_platform": "Android ARM64 (CPython 3.14.10)",
+      "abi": "py3-none-any",
+      "python_3_14_10_compat": true,
+      "bundling": "Bundled in APK (assets/python/vh/core/)",
+      "verification": "All 34 modules imported & tested via verify_core.py"
+    }
+  ]
+}
