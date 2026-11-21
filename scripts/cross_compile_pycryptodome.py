@@ -32,11 +32,14 @@ def main() -> int:
     cc = os.path.join(toolchain, "bin", "aarch64-linux-android24-clang")
     ar = os.path.join(toolchain, "bin", "llvm-ar")
     py314_inc = os.path.join(ws, "native", "python314", "include", "python3.14")
+    arm64_lib_dir = os.path.join(ws, "app", "src", "main", "jniLibs", "arm64-v8a")
 
     if not os.path.isfile(cc):
         raise FileNotFoundError(f"NDK clang not found: {cc}")
     if not os.path.isdir(py314_inc):
         raise FileNotFoundError(f"CPython 3.14 include dir not found: {py314_inc}")
+    if not os.path.isdir(arm64_lib_dir):
+        raise FileNotFoundError(f"ARM64 jniLibs dir not found: {arm64_lib_dir}")
 
     # Wrapper linker: buang flag -L/-I kosong maupun path host x86_64 (/usr/*, /lib*)
     ld_wrapper = os.path.join(cross_dir, "aarch64-ld-wrapper.sh")
@@ -69,7 +72,7 @@ def main() -> int:
         )
     os.chmod(ld_wrapper, 0o755)
 
-    # Set LIBDIR=None & LIBPL=None agar distutils tidak menyisipkan argumen -L kosong
+    # Arahkan LIBDIR & LIBPL ke jniLibs/arm64-v8a (valid str path, bukan None/kosong)
     base_vars = dict(sysconfig.get_config_vars())
     base_vars.update(
         {
@@ -85,10 +88,10 @@ def main() -> int:
             "PY_CFLAGS": f"-O2 -fPIC -DLTC_NO_ASM -I{py314_inc}",
             "PY_CORE_CFLAGS": f"-O2 -fPIC -DLTC_NO_ASM -I{py314_inc}",
             "CPPFLAGS": f"-I{py314_inc}",
-            "LDFLAGS": "",
-            "PY_LDFLAGS": "",
-            "LIBDIR": None,
-            "LIBPL": None,
+            "LDFLAGS": f"-L{arm64_lib_dir}",
+            "PY_LDFLAGS": f"-L{arm64_lib_dir}",
+            "LIBDIR": arm64_lib_dir,
+            "LIBPL": arm64_lib_dir,
             "INCLUDEPY": py314_inc,
             "CONFINCLUDEPY": py314_inc,
             "EXT_SUFFIX": ".cpython-314-aarch64-linux-android.so",
@@ -113,7 +116,7 @@ def main() -> int:
     env["LDSHARED"] = ld_wrapper
     env["OPT"] = "-O2 -fPIC"
     env["CFLAGS"] = f"-O2 -fPIC -DLTC_NO_ASM -I{py314_inc}"
-    env["LDFLAGS"] = ""
+    env["LDFLAGS"] = f"-L{arm64_lib_dir}"
 
     subprocess.run([sys.executable, "setup.py", "build_ext", "--inplace"], cwd=src_dir, env=env, check=True)
 
