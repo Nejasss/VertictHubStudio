@@ -352,7 +352,7 @@ def run_obfuscation(source_code: str, filename: str = "script.py", config_json: 
             strict_network_check=bool(raw_cfg.get("strict_network_check", False)),
             rename_identifiers=bool(raw_cfg.get("rename_identifiers", True)),
             lock_filename=bool(raw_cfg.get("lock_filename", False)),
-            require_launcher_gate=bool(raw_cfg.get("require_launcher_gate", False)),
+            require_launcher_gate=True,
             inject_decoy_methods=bool(raw_cfg.get("inject_decoy_methods", True)),
             periodic_recheck=bool(raw_cfg.get("periodic_recheck", False)),
             enable_version_fallback=False,
@@ -426,6 +426,7 @@ def run_obfuscation(source_code: str, filename: str = "script.py", config_json: 
                 "output_sha256": hashlib.sha256(obf_source.encode("utf-8")).hexdigest(),
                 "active_passes": active_passes,
                 "gate_env_name": gate_info["env_name"],
+                "gate_token": gate_info["token"],
                 "leak_report": leak_report,
                 "elapsed_ms": elapsed_ms,
             }
@@ -459,17 +460,16 @@ def run_build(
                 junk_intensity=int(opts.get("junk_intensity", 6)),
                 anti_debug=bool(opts.get("anti_debug", True)),
                 constant_protection=bool(opts.get("constant_protection", True)),
-                require_launcher_gate=False,
+                lock_filename=bool(opts.get("lock_filename", False)),
+                require_launcher_gate=True,
                 enable_version_fallback=False,
             )
             gate = obfuscator.generate_gate_info()
-            obf = obfuscator.obfuscate_source(source_code, config=cfg, expected_filename=base_name, gate_info=gate)
-            packed_py = packer.pack(
-                obf,
-                allow_no_gate=True,
-                lock_filename=bool(opts.get("lock_filename", False)),
-                expected_filename=base_name,
-                enable_version_fallback=False,
+            packed_py = obfuscator.obfuscate_source(
+                source_code,
+                config=cfg,
+                expected_filename=f"{stem}_protected.py",
+                gate_info=gate,
             )
             compile(packed_py, f"<{stem}_packed.py>", "exec")
             return _ok(
@@ -480,10 +480,13 @@ def run_build(
                     "artifact_content": packed_py,
                     "artifact_bytes": len(packed_py.encode("utf-8")),
                     "artifact_sha256": hashlib.sha256(packed_py.encode("utf-8")).hexdigest(),
+                    "gate_env_name": gate["env_name"],
+                    "gate_token": gate["token"],
                     "log": (
-                        f"[OK] AST Obfuscation selesai\n"
+                        f"[OK] AST Obfuscation + Gate binding selesai\n"
                         f"[OK] Bytecode marshal + HKDF-SHA256 multi-fragment XOR packer selesai\n"
                         f"[OK] Kompilasi sintaks loader terverifikasi (CPython {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro})\n"
+                        f"[INFO] Gate Env: {gate['env_name']}={gate['token']}\n"
                         f"[INFO] Ukuran output: {len(packed_py.encode('utf-8'))} bytes"
                     ),
                     "elapsed_ms": round((time.perf_counter() - t0) * 1000, 2),
@@ -503,12 +506,17 @@ def run_build(
                 rename_identifiers=True,
                 junk_intensity=int(opts.get("junk_intensity", 6)),
                 anti_debug=bool(opts.get("anti_debug", True)),
-                require_launcher_gate=False,
+                lock_filename=bool(opts.get("lock_filename", False)),
+                require_launcher_gate=True,
                 enable_version_fallback=False,
             )
             gate = obfuscator.generate_gate_info()
-            obf = obfuscator.obfuscate_source(source_code, config=cfg, expected_filename=base_name, gate_info=gate)
-            packed_py = packer.pack(obf, allow_no_gate=True, enable_version_fallback=False)
+            packed_py = obfuscator.obfuscate_source(
+                source_code,
+                config=cfg,
+                expected_filename=f"{stem}_protected.py",
+                gate_info=gate,
+            )
             packed_bytes = packed_py.encode("utf-8")
 
             manifest = launch_integrity.build_manifest(f"{stem}_protected.py", packed_bytes)
@@ -528,6 +536,8 @@ def run_build(
                     "signature_ed25519_b64": sig_b64,
                     "public_key_pem": pub_pem,
                     "artifact_name": f"{stem}_protected.py",
+                    "gate_env_name": gate["env_name"],
+                    "gate_token": gate["token"],
                 },
                 indent=2,
             )
@@ -541,10 +551,13 @@ def run_build(
                     "manifest_content": bundle_doc,
                     "artifact_bytes": len(packed_bytes),
                     "artifact_sha256": hashlib.sha256(packed_bytes).hexdigest(),
+                    "gate_env_name": gate["env_name"],
+                    "gate_token": gate["token"],
                     "log": (
                         f"[OK] Loader terenkripsi berhasil dibuat ({len(packed_bytes)} bytes)\n"
                         f"[OK] Keypair Ed25519 lokal dimuat dari {key_dir}\n"
-                        f"[OK] Manifest deterministik ditandatangani & diverifikasi (Ed25519 VALID)"
+                        f"[OK] Manifest deterministik ditandatangani & diverifikasi (Ed25519 VALID)\n"
+                        f"[INFO] Gate Env: {gate['env_name']}={gate['token']}"
                     ),
                     "elapsed_ms": round((time.perf_counter() - t0) * 1000, 2),
                 }
@@ -576,20 +589,86 @@ def run_build(
                 }
             )
 
+        if build_mode == "rust_launcher":
+            from Crypto.Cipher import AES
+            from vh.core import rust_launcher
+            from vh.core.crypto import build_fragment_chain, random_key, split_key_with_junk
+
+            cfg = obfuscator.ObfuscationConfig(
+                encrypt_strings=bool(opts.get("encrypt_strings", True)),
+                rename_identifiers=bool(opts.get("rename_identifiers", True)),
+                junk_intensity=int(opts.get("junk_intensity", 6)),
+                anti_debug=bool(opts.get("anti_debug", True)),
+                constant_protection=bool(opts.get("constant_protection", True)),
+                require_launcher_gate=True,
+                enable_version_fallback=False,
+            )
+            gate = obfuscator.generate_gate_info()
+            packed_py = obfuscator.obfuscate_source(
+                source_code,
+                config=cfg,
+                expected_filename=f"{stem}_protected.py",
+                gate_info=gate,
+            )
+            payload_bytes = packed_py.encode("utf-8")
+            archive, expected = rust_launcher._artifact_archive(f"{stem}_protected.py", payload_bytes, {})
+            key = random_key(32)
+            nonce = random_key(12)
+            ciphertext, tag = AES.new(key, AES.MODE_GCM, nonce=nonce).encrypt_and_digest(archive)
+            container = nonce + ciphertext + tag
+            parts, real_indices = split_key_with_junk(key, n_real_chunks=4, n_junk_chunks=5)
+            seed, tags = build_fragment_chain(parts, real_indices)
+            lock_name = f"{stem}_launcher" if opts.get("lock_filename") else ""
+            rs_source = rust_launcher._rust_source(
+                container=container,
+                key_parts=parts,
+                key_seed=seed,
+                key_tags=tags,
+                expected=expected,
+                main_name=f"{stem}_protected.py",
+                lock_name=lock_name,
+                gate_env_name=gate["env_name"],
+                gate_token=gate["token"],
+                gate_mask=hashlib.sha256(key).digest(),
+            )
+            cargo_toml = (
+                '[package]\n'
+                f'name = "{stem}_launcher"\n'
+                'version = "0.1.0"\n'
+                'edition = "2021"\n\n'
+                '[dependencies]\n'
+                'aes-gcm = "0.10"\n'
+                'sha2 = "0.10"\n'
+            )
+            return _ok(
+                {
+                    "build_mode": build_mode,
+                    "status": "SUCCESS",
+                    "artifact_filename": f"{stem}_rust_launcher.rs",
+                    "artifact_content": rs_source,
+                    "manifest_filename": "Cargo.toml",
+                    "manifest_content": cargo_toml,
+                    "artifact_bytes": len(rs_source.encode("utf-8")),
+                    "artifact_sha256": hashlib.sha256(rs_source.encode("utf-8")).hexdigest(),
+                    "log": (
+                        f"[OK] Payload terenkripsi & dibungkus ke crate Rust ({len(rs_source.encode('utf-8'))} bytes)\n"
+                        f"[INFO] Toolchain cargo/rustc tidak ada di sandbox APK -> sumber Rust siap kompilasi diekspor\n"
+                        f"[INFO] Kompilasi di Termux: pkg install rust clang && cargo build --release"
+                    ),
+                    "elapsed_ms": round((time.perf_counter() - t0) * 1000, 2),
+                }
+            )
+
         toolchain_checks = {
             "cython_native": ("vh.core.cython_build", "Cython + C Compiler (clang/gcc) + python3-config"),
             "c_embed": ("vh.core.embed_build", "C Compiler (clang/gcc) + libpython3.14 headers"),
             "native_launcher": ("vh.core.native_launcher", "C Compiler (clang/gcc) untuk ELF wrapper"),
-            "rust_launcher": ("vh.core.rust_launcher", "Rust Toolchain (cargo + rustc --offline)"),
         }
         if build_mode in toolchain_checks:
             mod_fqn, desc = toolchain_checks[build_mode]
             mod = importlib.import_module(mod_fqn)
             if hasattr(mod, "ensure_toolchain"):
                 mod.ensure_toolchain()
-            else:
-                if not shutil.which("cargo") or not shutil.which("rustc"):
-                    raise RuntimeError("Toolchain Rust (cargo/rustc) tidak ditemukan secara lokal di perangkat Android.")
             return _ok(
                 {
                     "build_mode": build_mode,

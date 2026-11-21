@@ -25,7 +25,7 @@
         "antisandbox_threshold": 6,
         "hook_detection": false,
         "lock_filename": false,
-        "require_launcher_gate": false
+        "require_launcher_gate": true
       }
     },
     {
@@ -53,7 +53,7 @@
         "antisandbox_threshold": 6,
         "hook_detection": true,
         "lock_filename": false,
-        "require_launcher_gate": false
+        "require_launcher_gate": true
       }
     },
     {
@@ -81,7 +81,7 @@
         "antisandbox_threshold": 6,
         "hook_detection": false,
         "lock_filename": false,
-        "require_launcher_gate": false
+        "require_launcher_gate": true
       }
     },
     {
@@ -109,7 +109,7 @@
         "antisandbox_threshold": 6,
         "hook_detection": true,
         "lock_filename": false,
-        "require_launcher_gate": false
+        "require_launcher_gate": true
       }
     }
   ]
