@@ -41,8 +41,6 @@ jobs:
         run: |
           mkdir -p /tmp/cpython_pkg /tmp/cpython_extract
           ARCHIVE="/tmp/cpython_pkg/cpython-3.14.10-android-aarch64.tar.gz"
-
-          # Resolve official PEP 738 Android AArch64 tarball URL from python.org
           URL_PRIMARY="https://www.python.org/ftp/python/3.14.10/python-3.14.10-aarch64-linux-android.tar.gz"
           URL_ALT="https://www.python.org/ftp/python/3.14.10/python-3.14.10-android-aarch64.tar.gz"
 
@@ -51,17 +49,9 @@ jobs:
           elif curl -fsSL "$URL_ALT" -o "$ARCHIVE"; then
             echo "Downloaded $URL_ALT"
           else
-            RESOLVED=$(python3 -c '
-import re, urllib.request
-html = urllib.request.urlopen("https://www.python.org/ftp/python/3.14.10/").read().decode("utf-8", "replace")
-m = re.findall(r"href=['"]([^'"]*(?:aarch64|arm64)[^'"]*android[^'"]*\.tar\.(?:gz|xz)|[^'"]*android[^'"]*(?:aarch64|arm64)[^'"]*\.tar\.(?:gz|xz))['"]", html, re.I)
-print(m[0] if m else "")
-')
-            if [ -z "$RESOLVED" ]; then
-              echo "ERROR: Tidak dapat menemukan paket CPython 3.14.10 Android AArch64 di python.org"
-              exit 1
-            fi
-            curl -fL "https://www.python.org/ftp/python/3.14.10/${RESOLVED}" -o "$ARCHIVE"
+            RESOLVED_URL=$(python3 scripts/resolve_cpython_url.py)
+            echo "Resolved URL: $RESOLVED_URL"
+            curl -fL "$RESOLVED_URL" -o "$ARCHIVE"
           fi
 
           echo "${CPYTHON_SHA256}  ${ARCHIVE}" | sha256sum -c -
@@ -82,7 +72,6 @@ print(m[0] if m else "")
           cp -r "$PREFIX_DIR"/include/python3.14 native/python314/include/
           cp -r "$PREFIX_DIR"/lib/python3.14/* app/src/main/assets/python/stdlib/
 
-          # Package stdlib C extensions as libvh_ext_<mod>.so in jniLibs so Android PackageManager extracts them
           if [ -d app/src/main/assets/python/stdlib/lib-dynload ]; then
             for sofile in app/src/main/assets/python/stdlib/lib-dynload/*.so; do
               [ -e "$sofile" ] || continue
@@ -110,45 +99,7 @@ print(m[0] if m else "")
 
           mkdir -p "${GITHUB_WORKSPACE}/app/src/main/assets/python/site-packages"
           cp -r lib/Crypto "${GITHUB_WORKSPACE}/app/src/main/assets/python/site-packages/"
-
-          python3 - << 'PYEOF'
-import os, shutil
-
-ws = os.environ["GITHUB_WORKSPACE"]
-crypto_root = os.path.join(ws, "app/src/main/assets/python/site-packages/Crypto")
-jnilibs = os.path.join(ws, "app/src/main/jniLibs/arm64-v8a")
-
-for r, _, files in os.walk(crypto_root):
-    for fn in files:
-        if fn.endswith(".so"):
-            full = os.path.join(r, fn)
-            clean_name = fn.split(".")[0] + ".so"
-            clean_full = os.path.join(r, clean_name)
-            if full != clean_full:
-                os.rename(full, clean_full)
-            rel_pkg = os.path.relpath(r, os.path.dirname(crypto_root)).replace(os.sep, "_")
-            mod_stem = clean_name[:-3]
-            jni_so = os.path.join(jnilibs, f"libvh_crypto_{rel_pkg}_{mod_stem}.so")
-            shutil.copy2(clean_full, jni_so)
-
-# Patch Crypto/Util/_raw_api.py to resolve native libraries from VH_NATIVE_LIB_DIR first
-raw_api = os.path.join(crypto_root, "Util", "_raw_api.py")
-with open(raw_api, "r", encoding="utf-8") as f:
-    src = f.read()
-
-hook = """    native_dir = os.environ.get("VH_NATIVE_LIB_DIR", "").strip()
-    if native_dir:
-        jni_cand = os.path.join(native_dir, "libvh_crypto_" + name.replace(".", "_") + ".so")
-        if os.path.isfile(jni_cand):
-            return load_lib(jni_cand, cdecl)
-"""
-target = "    for ext in extension_suffixes:"
-assert target in src, "load_pycryptodome_raw_lib anchor not found"
-src = src.replace(target, hook + "\n" + target, 1)
-with open(raw_api, "w", encoding="utf-8") as f:
-    f.write(src)
-print("[OK] PyCryptodome ARM64 extensions packaged into jniLibs/arm64-v8a.")
-PYEOF
+          python3 "${GITHUB_WORKSPACE}/scripts/package_pycryptodome.py"
 
       - name: 7. Validate Runtime Spec, Dependency Manifest & Core Modules
         run: |
